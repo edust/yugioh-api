@@ -1,0 +1,42 @@
+<html>
+<head>
+    <script src='../static/js/jquery-2.0.0.min.js'></script>
+    <script src='../static/js/index.js'></script>
+</head>
+<body>
+    <div>
+        <div>KANA</div>
+        <div>
+            <input type="text" id="txtName" style="width: 500px"><br/>
+            <input id="txtKana" type="text" readonly style="width: 500px;">
+            <button onclick="onKanaClick();">KANA</button>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px;">
+        <div>ADD KANA</div>
+        <input type="text" id="txtAddName" style="width: 500px;"><br/>
+        <input type="text" id="txtAddKana" style="width: 500px;">
+        <button onclick="onAddKanaClick();">ADD KANA</button>
+    </div>
+
+    <div style="margin-top: 32px;">
+        <div>LIST KANA</div>
+        <div>
+            <input type="text" id="txtSearch" style="width: 500px;"><br/>
+            <button onclick="onSearchKanaClick();">SEARCH KANA</button>
+            <button onclick="onListKanaClick();">LIST KANA</button>
+        </div>
+        <div>
+            <table id="tblListKana"></table>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px;">
+        <div>RELOAD DATA</div>
+        <div>
+            <button onclick="onReloadClick();">RELOAD DATA</button>
+        </div>
+    </div>
+</body>
+</html>

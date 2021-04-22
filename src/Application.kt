@@ -1,6 +1,7 @@
 package com.rarnu.yugioh
 
 import com.isyscore.kotlin.ktor.installPlugin
+import com.rarnu.yugioh.common.loadKanjiKana
 import com.rarnu.yugioh.database.cardName
 import io.ktor.application.*
 import io.ktor.features.*
@@ -15,6 +16,7 @@ import kotlin.time.ExperimentalTime
 
 fun main(args: Array<String>): Unit = io.ktor.server.tomcat.EngineMain.main(args)
 
+@ExperimentalStdlibApi
 @KtorExperimentalAPI
 @Suppress("unused")
 fun Application.module() {
@@ -23,14 +25,13 @@ fun Application.module() {
         sessionIdentifier = "YugiohAPISession",
         allowCors = true,
         headers = mapOf("X-Engine" to "Ktor")) {
-
     }
+    loadKanjiKana()
     routing {
         resources("web")
         resources("static")
         static("/static") { resources("static") }
         static { defaultResource("index.html", "web") }
-        yugiohAPIRouting()
         sqliteRouting()
         cardNameRouting()
     }

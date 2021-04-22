@@ -1,13 +1,6 @@
-create
-database YugiohAPI character set utf8mb4;
+create database YugiohAPI character set utf8mb4;
 
-create table KanjiKana
-(
-    id   bigint primary key auto_increment,
-    name varchar(256)  not null,
-    kana varchar(1024) not null
-) character set utf8mb4;
-
+/* 卡名表 */
 CREATE TABLE `YGOCardName`
 (
     `id`    bigint       NOT NULL AUTO_INCREMENT,
@@ -16,16 +9,22 @@ CREATE TABLE `YGOCardName`
     `kana`  varchar(512) NOT NULL,
     `kk`    varchar(1024) DEFAULT '',
     `done`  int           DEFAULT '0',
+    `donetime` bigint default 0,
     PRIMARY KEY (`id`),
     UNIQUE KEY `kanji` (`kanji`)
-) ENGINE=InnoDB AUTO_INCREMENT=20948 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) character set utf8mb4;
 
-CREATE TABLE `YGOPack`
-(
-    `id`   bigint       NOT NULL AUTO_INCREMENT,
-    `pack` varchar(512) NOT NULL,
+/* 字段表 */
+create table `YGOSetName` (
+    `id`    bigint       NOT NULL AUTO_INCREMENT,
+    `kanji` varchar(512) NOT NULL,
+    `kana`  varchar(512) NOT NULL,
+    `kk`    varchar(1024) DEFAULT '',
+    `done`  int           DEFAULT '0',
+    `donetime` bigint default 0,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `pack` (`pack`)
-) ENGINE=InnoDB AUTO_INCREMENT=1040 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    UNIQUE KEY `kanji` (`kanji`)
+) character set utf8mb4;
 
-alter table YGOCardName add column donetime bigint default 0;
+alter table YGOSetName modify kanji varchar(512) collate utf8mb4_bin;
+

@@ -14,6 +14,8 @@ CREATE TABLE `YGOCardName`
     UNIQUE KEY `kanji` (`kanji`)
 ) character set utf8mb4;
 
+alter table YGOCardName modify kanji varchar(512) collate utf8mb4_unicode_ci;
+
 /* 字段表 */
 create table `YGOSetName` (
     `id`    bigint       NOT NULL AUTO_INCREMENT,

@@ -21,7 +21,32 @@ fun String.toCardName(): String {
     return replace("∀", "Ɐ").replace("’", "´")
 }
 
-fun String.effectCardNames(): Set<String> = split("「").drop(1).map { it.substring(0, it.indexOf("」")) }.toSet()
+fun String.effectCardNames(): Set<String> {
+    val result = mutableListOf<String>()
+    var tmp = this
+    while (tmp.contains("「")) {
+        val start = tmp.indexOf("「")
+        var leftCount = 1
+        var rightCount = 0
+        for (i in start + 1 until tmp.length) {
+            if (tmp[i] == '「') {
+                leftCount++
+                continue
+            }
+            if (tmp[i] == '」') {
+                rightCount++
+                if (rightCount == leftCount) {
+                    val tStr = tmp.substring(start + 1, i)
+                    result.add(tStr)
+                    tmp = tmp.substring(i + 1)
+                    break
+                }
+            }
+        }
+    }
+    return result.toSet()
+    // return split("「").drop(1).map { it.substring(0, it.indexOf("」")) }.toSet()
+}
 
 fun String.kana(): String =
     replace("\\[.*?\\(.*?\\)]".toRegex()) { s -> "|${s.value}|" }.split("|").filter { it.isNotEmpty() }.joinToString("") { value ->

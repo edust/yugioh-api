@@ -14,8 +14,8 @@ class CardNameTable(private val app: Application) {
     /* return: found, kanjikana */
     fun findKanjiKana(name: String): Pair<Boolean, String> =
         app.conn.prepareStatement("select kk from YGOCardName where kanji = ? or kanji = ?").use { stmt ->
-            stmt.setString(1, name.apply { println("cardname = $this") })
-            stmt.setString(2, name.toDBC().apply { println("cardname2 = $this") })
+            stmt.setString(1, name)
+            stmt.setString(2, name.toDBC())
             stmt.executeQuery().use { resultSet ->
                 if (resultSet.next()) {
                     true to resultSet.getString(1).toCardName()

@@ -1,6 +1,7 @@
 package com.rarnu.yugioh
 
 import com.rarnu.yugioh.common.kanaEffect
+import com.rarnu.yugioh.common.kanaNormal
 import com.rarnu.yugioh.database.cardName
 import io.ktor.application.*
 import io.ktor.response.*
@@ -27,4 +28,8 @@ fun Routing.cardNameRouting() {
         call.respond(RespCardName(true, ret))
     }
 
+    post<ReqCardName>("/kk/normal") { p ->
+        val ret = p.name.kanaNormal()
+        call.respond(RespCardName(true, ret))
+    }
 }

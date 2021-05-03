@@ -5,22 +5,24 @@
     <script src='../static/js/index.js'></script>
 </head>
 <body>
+<div>
+    总收录卡片数: <span id="spCardCount"></span>, 总收录注音数: <span id="spKanaCount"></span> , 总收录字段数: <span id="spSetCount"></span>
+</div>
+<div style="margin-top: 16px">
     <div>
-        <div>卡片名称注音</div>
-        <div>
-            <input type="text" id="txtName" style="width: 500px"><br/>
-            <input id="txtKana" type="text" readonly style="width: 500px;">
-            <button onclick="onKanaClick();">注音</button>
-        </div>
+        <input type="radio" name="rbType" value="0" checked>卡片名称注音
+        <input type="radio" name="rbType" value="1">卡片效果注音
+        <input type="radio" name="rbType" value="2">常规日语注音
     </div>
+    <div>
+        <textarea type="text" id="txtText" style="width: 500px; height: 200px"></textarea><br/>
+        <textarea id="txtKana" readonly style="width: 500px; height: 200px;"></textarea>
+        <button onclick="onKanaClick();">注音</button>
+    </div>
+</div>
 
-    <div style="margin-top: 32px;">
-        <div>卡片效果注音</div>
-        <div>
-            <textarea type="text" id="txtEffect" style="width: 500px; height: 200px"></textarea><br/>
-            <textarea id="txtEffectKana" readonly style="width: 500px; height: 200px;"></textarea>
-            <button onclick="onEffectKanaClick();">注音</button>
-        </div>
-    </div>
+<script type="text/javascript">
+    getCommonData();
+</script>
 </body>
 </html>

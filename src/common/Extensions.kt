@@ -2,11 +2,7 @@ package com.rarnu.yugioh.common
 
 import com.atilika.kuromoji.ipadic.Token
 import com.atilika.kuromoji.ipadic.Tokenizer
-import com.isyscore.kotlin.common.HttpMethod
-import com.isyscore.kotlin.common.http
-import com.isyscore.kotlin.common.json.JSONObject
 import com.rarnu.yugioh.database.cardName
-import com.sun.javafx.text.PrismTextLayout
 import io.ktor.application.*
 import io.ktor.util.*
 import kotlin.text.toCharArray
@@ -84,17 +80,20 @@ fun String.kanaEffect(app: Application): String {
 }
 
 fun String.kanaNormal(): String {
-    val tmp = replace("\\[.*?\\(.*?\\)]".toRegex()) { s ->
-        s.value.replace("[", "").run { substring(0, indexOf("(")) }
-    }
     val tokenizer = Tokenizer()
-    val tokens: List<Token> = tokenizer.tokenize(tmp)
+    val tokens: List<Token> = tokenizer.tokenize(this)
     var retStr = ""
     for (token in tokens) {
         retStr += token.kana()
     }
     return retStr
 }
+
+fun String.removeKana(): String =
+    replace("\\[.*?\\(.*?\\)]".toRegex()) { s ->
+        s.value.replace("[", "").run { substring(0, indexOf("(")) }
+    }
+
 
 @ExperimentalStdlibApi
 private fun String.characterToHalf(): String =

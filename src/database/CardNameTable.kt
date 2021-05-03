@@ -33,6 +33,20 @@ class CardNameTable(private val app: Application) {
                 } else false to ""
             }
         }
+
+    fun getKanaCount(): Int =
+        app.conn.createStatement().use { stmt ->
+            stmt.executeQuery("select count(1) from YGOCardName").use { resultSet ->
+                if (resultSet.next()) resultSet.getInt(1) else 0
+            }
+        }
+
+    fun getSetCount(): Int =
+        app.conn.createStatement().use { stmt ->
+            stmt.executeQuery("select count(1) from YGOSetName").use { resultSet ->
+                if (resultSet.next()) resultSet.getInt(1) else 0
+            }
+        }
 }
 
 @ExperimentalStdlibApi

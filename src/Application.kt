@@ -2,19 +2,13 @@ package com.rarnu.yugioh
 
 import com.isyscore.kotlin.ktor.installPlugin
 import com.rarnu.yugioh.common.loadKanjiKana
-import com.rarnu.yugioh.database.cardName
 import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.http.*
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
-import io.ktor.routing.routing
+import io.ktor.http.content.*
+import io.ktor.routing.*
 import io.ktor.util.*
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
-fun main(args: Array<String>): Unit = io.ktor.server.tomcat.EngineMain.main(args)
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+// fun main(args: Array<String>): Unit = io.ktor.server.tomcat.EngineMain.main(args)
 
 @ExperimentalStdlibApi
 @KtorExperimentalAPI
@@ -34,5 +28,6 @@ fun Application.module() {
         static { defaultResource("index.html", "web") }
         sqliteRouting()
         cardNameRouting()
+        commonRouting()
     }
 }

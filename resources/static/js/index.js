@@ -3,31 +3,36 @@
  ************************************/
 
 function onKanaClick() {
-    let name = $('#txtName').val();
+    let name = $('#txtText').val();
+    let type = $('input[name="rbType"]:checked').val();
     if (!name || name.trim() === '') return;
+    let url = 'search';
+    if (type === '1') {
+        url = 'effect';
+    } else if (type === '2') {
+        url = 'normal';
+    }
     $.ajax({
-        url: '/kk/search',
+        url: `/kk/${url}`,
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({name: name}),
         success: res => {
-            let str = res.found ? res.kk : '没有找到卡名'
+            let str = res.found ? res.kk : '没有找到注音'
             $('#txtKana').val(str);
         }
     });
 }
 
-function onEffectKanaClick() {
-    let effect = $('#txtEffect').val();
-    if (!effect || effect.trim() === '') return;
+function getCommonData() {
     $.ajax({
-        url: '/kk/effect',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({name: effect}),
-        success: res => {
-            let str = res.found ? res.kk : '没有找到卡名'
-            $('#txtEffectKana').val(str);
+        url: '/api/common/count',
+        type: 'GET',
+        dataType: 'json',
+        success: (res) => {
+            $('#spCardCount')[0].innerHTML = res.cardCount;
+            $('#spKanaCount')[0].innerHTML = res.kanaCount;
+            $('#spSetCount')[0].innerHTML = res.setCount;
         }
     });
 }

@@ -113,6 +113,13 @@ class SQLiteDatabase(private val app: Application) {
         return if (id != -1) getCardInfo(id, lang) else null
     }
 
+    fun getCardCount(): Int =
+        conn.createStatement().use { stmt ->
+            stmt.executeQuery("select count(1) from datas").use { resultSet ->
+                if (resultSet.next()) resultSet.getInt(1) else 0
+            }
+        }
+
     private fun getTextTable(lang: String): String = when (lang) {
         "sc" -> "zhcn_texts"
         "tc" -> "zhtw_texts"

@@ -32,6 +32,7 @@ begin
   // file location
   RegisterFileLocation('static', filePath);
 
+
   // common
   HTTPRouter.RegisterRoute('/', rmAll, @index);
   HTTPRouter.RegisterRoute('/api/common/count', rmAll, @getCommonCount);
@@ -54,7 +55,7 @@ begin
 
   {$IFNDEF DEBUG}
   Application.Port:=9800;
-  Application.Threaded:=False;
+  Application.Threaded:=True;
   Application.Initialize;
   Application.Run;
   {$ELSE}

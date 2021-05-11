@@ -11,7 +11,6 @@ import io.ktor.util.*
 fun Routing.commonRouting() {
 
     get("/api/common/count") {
-
         val ret = application.common.getCommonData()
         call.respond(ret)
     }

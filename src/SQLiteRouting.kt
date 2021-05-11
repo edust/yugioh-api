@@ -4,6 +4,7 @@ import com.rarnu.yugioh.database.SQLiteDatabase
 import com.rarnu.yugioh.database.sqlite
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -21,18 +22,22 @@ fun Routing.sqliteRouting() {
     /* 查找卡片 */
     post<ReqFindCard>("/card/find") { p ->
         // 查询要带上语言
-        val ret = application.sqlite.find(p.key, p.byEffect, SQLiteDatabase.Language.valueOf(p.language))
+        val ret = application.sqlite.find(p.key, p.byEffect, p.language)
         call.respond(ret)
     }
 
     /* 根据卡片ID列表查询卡片名称列表 */
     post<ReqCardNames>("/card/names") { p ->
-        val ret = application.sqlite.getList(p.ids, SQLiteDatabase.Language.valueOf(p.language))
+        val ret = application.sqlite.getList(p.ids, p.language)
         call.respond(ret)
     }
 
     get("api/yugioh/card/{id}") {
-        val id = (call.parameters["id"] ?: "0").toInt()
+        val id = try { (call.parameters["id"] ?: "0").toInt() } catch (th: Throwable) { null }
+        if (id == null) {
+            call.respond(HttpStatusCode.InternalServerError, "ID 错误")
+            return@get
+        }
         val lang = call.request.queryParameters["lang"] ?: "jp"
         val info = application.sqlite.getCardInfo(id, lang)
         if (info == null) {

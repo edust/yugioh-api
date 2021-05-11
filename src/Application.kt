@@ -7,8 +7,7 @@ import io.ktor.http.content.*
 import io.ktor.routing.*
 import io.ktor.util.*
 
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
-// fun main(args: Array<String>): Unit = io.ktor.server.tomcat.EngineMain.main(args)
+fun main(args: Array<String>): Unit = io.ktor.server.tomcat.EngineMain.main(args)
 
 @ExperimentalStdlibApi
 @KtorExperimentalAPI

@@ -3,7 +3,16 @@ gradle/
 .gradle/
 build/
 .DS_Store
+backup/
+out/
+ygosvr
 
+*.o
+*.ppu
+*.compiled
+*.iml
+*.cdb
+*.lps
 # Compiled class file
 *.class
 

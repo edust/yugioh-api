@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        mavenLocal()
+        maven { url 'https://kotlin.bintray.com/ktor' }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.0.0"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group 'com.isyscore'
+version '0.0.1'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+    maven {
+        credentials {
+            username "development"
+            password "1sysc0re@nexus"
+        }
+        url 'http://10.30.30.3:8081/repository/maven-public'
+    }
+}
+
+dependencies {
+    compile "com.github.isyscore:common-jvm:1.6.1"
+    compile 'com.atilika.kuromoji:kuromoji-ipadic:0.9.0'
+    compile 'com.google.code.gson:gson:2.8.6'
+}
+
+mainClassName = 'com.rarnu.diy.kana.MainKt'
+
+shadowJar {
+    archiveFileName = "${project.name}.jar"
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+tasks.withType(Jar) {
+    destinationDir(file("$rootDir/jar"))
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+clean.doLast() {
+    file("$rootDir/jar").deleteDir()
+}

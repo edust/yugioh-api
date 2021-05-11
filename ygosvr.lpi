@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="11"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
+      <Title Value="ygosvr"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="2">
+      <Item1 Name="Default" Default="True"/>
+      <Item2 Name="rarnu">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="ygosvr" ApplyConventions="False"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Linking>
+            <Debugging>
+              <UseHeaptrc Value="True"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <CompilerMessages>
+              <IgnoredMessages idx6058="True" idx3124="True" idx3123="True"/>
+            </CompilerMessages>
+          </Other>
+        </CompilerOptions>
+      </Item2>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0"/>
+    </RunParams>
+    <RequiredPackages Count="2">
+      <Item1>
+        <PackageName Value="weblaz"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPackages>
+    <Units Count="13">
+      <Unit0>
+        <Filename Value="ygosvr.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="untdatabase.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untDatabase"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="untroute.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untRoute"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="untenv.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untEnv"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="untdataobj.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untDataObj"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="unttest.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untTest"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="untmysql.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untMySQL"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="untdataconvert.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untDataConvert"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="untstringextension.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untStringExtension"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="untnodbdata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untNoDbData"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="utf8stringhelper.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UTF8StringHelper"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="unttestutf8.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untTestUTF8"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="untexternalexecutor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untExternalExecutor"/>
+      </Unit12>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="ygosvr" ApplyConventions="False"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

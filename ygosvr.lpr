@@ -54,6 +54,7 @@ begin
   HTTPRouter.RegisterRoute('/api/kanjikana/text', rmPost, @kkNormalText);
 
   {$IFNDEF DEBUG}
+  Application.QueueSize:= 1000;
   Application.Port:=9800;
   Application.Threaded:=True;
   Application.Initialize;

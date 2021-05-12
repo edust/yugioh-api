@@ -104,7 +104,12 @@ implementation
 
 function StrToJSONEncoded(AStr: string): string;
 begin
-  Exit(AStr.Replace('"', '\"', [rfIgnoreCase, rfReplaceAll]).Replace(#10, '\n'));
+  Exit(AStr
+    .Replace('"', '\"', [rfIgnoreCase, rfReplaceAll])
+    .Replace(#13#10, '\n', [rfReplaceAll, rfIgnoreCase])
+    .Replace(#10, '\n', [rfIgnoreCase, rfReplaceAll])
+    .Replace(#13, '\n', [rfIgnoreCase, rfReplaceAll])
+    );
 end;
 
 { TCardNameData }

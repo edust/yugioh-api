@@ -100,6 +100,8 @@ type
     function toJSON(): string;
   end;
 
+function StrToJSONEncoded(AStr: string): string;
+
 implementation
 
 function StrToJSONEncoded(AStr: string): string;

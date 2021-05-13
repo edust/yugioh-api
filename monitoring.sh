@@ -5,7 +5,8 @@ cd /root/server
 date=`date`
  
 #查询端口占用
-lsof -i:9800
+# lsof -i:9800
+netstat -anp | grep :9800
  
 # $? -ne 0 不存在 $? -eq 0存在 
 if [ $? -ne 0 ]

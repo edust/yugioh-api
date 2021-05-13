@@ -10,10 +10,44 @@ program ygosvr;
 uses
   cthreads, cmem, Classes, sysutils, fpwebfile, fphttpapp, HTTPDefs, httproute, fphttp,
   untDatabase, untRoute, untEnv, untDataObj, untMySQL, untDataConvert,
-  untStringExtension, untNoDbData, untExternalExecutor
+  untStringExtension, untNoDbData, untExternalExecutor, untLogger
   {$IFDEF DEBUG},untTest, untTestUTF8{$ENDIF}
   ;
 
+type
+
+  { TApplicationEvent }
+
+  TApplicationEvent = class
+  public
+    Procedure onError(Sender : TObject; E : Exception);
+    Procedure onUnknownEncode(Sender : TRequest; Const ContentType : String;Stream : TStream);
+  end;
+
+procedure showRequestException(AResponse: TResponse; AnException: Exception; var handled: boolean);
+begin
+  log(lvError, 'showRequestException: ' + AnException.Message);
+  AResponse.Code:= 500;
+  AResponse.ContentType:= 'application/json';
+  AResponse.Content:= '{"error": "%s"}'.Format([StrToJSONEncoded(AnException.Message)]);
+  handled:= True;
+end;
+
+{ TApplicationEvent }
+
+procedure TApplicationEvent.onError(Sender: TObject; E: Exception);
+begin
+  log(lvError, 'onError:' + E.Message);
+end;
+
+procedure TApplicationEvent.onUnknownEncode(Sender: TRequest;
+  const ContentType: String; Stream: TStream);
+begin
+  log(lvError, 'onUnknownEncode: ' + Sender.ContentEncoding);
+end;
+
+var
+  event: TApplicationEvent;
 begin
   // fill env
   workPath:= ExtractFilePath(Application.ExeName);
@@ -32,9 +66,9 @@ begin
   // file location
   RegisterFileLocation('static', filePath);
 
-
   // common
   HTTPRouter.RegisterRoute('/', rmAll, @index);
+  HTTPRouter.RegisterRoute('/system/status', rmAll, @systemStatus);
   HTTPRouter.RegisterRoute('/api/common/count', rmAll, @getCommonCount);
 
   // yugioh
@@ -53,7 +87,12 @@ begin
   HTTPRouter.RegisterRoute('/api/kanjikana/effect', rmPost, @kkCardEffect);
   HTTPRouter.RegisterRoute('/api/kanjikana/text', rmPost, @kkNormalText);
 
+  event := TApplicationEvent.Create;
+
   {$IFNDEF DEBUG}
+  Application.OnShowRequestException:= @showRequestException;
+  Application.OnException:= @event.onError;
+  Application.OnUnknownRequestEncoding:= @event.onUnknownEncode;
   Application.QueueSize:= 1000;
   Application.Port:=9800;
   Application.Threaded:=True;
@@ -72,5 +111,6 @@ begin
   freeDatabase();
   freeMySQL();
   freeNoDbData();
+  event.Free;
 end.
 

@@ -53,7 +53,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="14">
       <Unit0>
         <Filename Value="ygosvr.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -118,6 +118,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="untExternalExecutor"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="untlogger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="untLogger"/>
+      </Unit13>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

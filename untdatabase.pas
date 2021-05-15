@@ -5,7 +5,7 @@ unit untDatabase;
 interface
 
 uses
-  Classes, SysUtils, SQLite3Conn, fphttpapp, SQLDB, untEnv, untDataObj;
+  Classes, SysUtils, SQLite3Conn, fphttpapp, SQLDB, untEnv, untDataObj, untLogger;
 
 
 procedure initDatabase();
@@ -51,14 +51,26 @@ begin
   if (query <>  nil) then begin
     query.Clear;
     query.Free;
+    query := nil;
   end;
   if (sqlite <> nil) then begin
     sqlite.Close(True);
     sqlite.Free;
+    sqlite := nil;
   end;
   if (trans <> nil) then begin
     trans.Free;
+    trans := nil;
   end;
+end;
+
+function ToDBStr(str: string): string;
+begin
+  Exit(str
+    .Replace('''', '''''', [rfIgnoreCase, rfReplaceAll])
+    .Replace(#13, '', [rfReplaceAll, rfIgnoreCase])
+    .Replace(#10, '', [rfIgnoreCase, rfReplaceAll])
+  );
 end;
 
 function getTextTableName(ALang: string): string;
@@ -93,7 +105,7 @@ begin
   tn := getTextTableName(ALang);
   sql := 'select t.id, t.name, t.desc, d.type, d.atk, d.def, d.level, d.race, d.attribute, d.setid from '+tn+' t join datas d on t.id = d.id where 1 = 1';
   AKey:= AKey.Replace('''', '''''');
-  if (AKey.Trim() <> '') then sql += ' and (t.name like ''%'+ AKey +'%'' or t.desc like ''%'+AKey+'%'')';
+  if (AKey.Trim() <> '') then sql += ' and (t.name like ''%'+ ToDBStr(AKey) +'%'' or t.desc like ''%'+ ToDBStr(AKey) + '%'')';
   if (ACardType <> 0) then sql += ' and d.type & %d'.Format([ACardType]);
   if (AAttr <> 0) then sql += ' and d.attribute & %d'.Format([AAttr]);
   if (AIcon <> 0) then sql += ' and d.type & %d'.Format([AIcon]);
@@ -102,22 +114,27 @@ begin
   if (AMonsterType <> 0) then sql += ' and d.type & %d'.Format([AMonsterType]);
   query.Clear;
   query.SQL.Text:= sql;
-  query.Open;
-
-  while not query.EOF do begin
-    item := TCardData.Create;
-    item.id:= query.FieldByName('id').AsInteger;
-    item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    item.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    item.&type:= query.FieldByName('type').AsInteger;
-    item.atk:= query.FieldByName('atk').AsInteger;
-    item.def:= query.FieldByName('def').AsInteger;
-    item.level:= query.FieldByName('level').AsInteger;
-    item.race:= query.FieldByName('race').AsInteger;
-    item.attribute:= query.FieldByName('attribute').AsInteger;
-    item.setid:= query.FieldByName('setid').AsString;
-    list.Add(item);
-    query.Next;
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      item.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      item.&type:= query.FieldByName('type').AsInteger;
+      item.atk:= query.FieldByName('atk').AsInteger;
+      item.def:= query.FieldByName('def').AsInteger;
+      item.level:= query.FieldByName('level').AsInteger;
+      item.race:= query.FieldByName('race').AsInteger;
+      item.attribute:= query.FieldByName('attribute').AsInteger;
+      item.setid:= query.FieldByName('setid').AsString;
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doSearchCardData: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(list);
@@ -131,19 +148,25 @@ begin
   tn := getTextTableName(ALang);
   query.Clear;
   query.SQL.Text:= 'select t.id, t.name, t.desc, d.type, d.atk, d.def, d.level, d.race, d.attribute, d.setid from %s t join datas d on t.id = d.id where t.id = %d'.Format([tn, APassword]);
-  query.Open;
-  if (not query.EOF) then begin
-    d := TCardData.Create;
-    d.id:= query.FieldByName('id').AsInteger;
-    d.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    d.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    d.&type:= query.FieldByName('type').AsInteger;
-    d.atk:= query.FieldByName('atk').AsInteger;
-    d.def:= query.FieldByName('def').AsInteger;
-    d.level:= query.FieldByName('level').AsInteger;
-    d.race:= query.FieldByName('race').AsInteger;
-    d.attribute:= query.FieldByName('attribute').AsInteger;
-    d.setid:= query.FieldByName('setid').AsString;
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      d := TCardData.Create;
+      d.id:= query.FieldByName('id').AsInteger;
+      d.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      d.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      d.&type:= query.FieldByName('type').AsInteger;
+      d.atk:= query.FieldByName('atk').AsInteger;
+      d.def:= query.FieldByName('def').AsInteger;
+      d.level:= query.FieldByName('level').AsInteger;
+      d.race:= query.FieldByName('race').AsInteger;
+      d.attribute:= query.FieldByName('attribute').AsInteger;
+      d.setid:= query.FieldByName('setid').AsString;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetOneCard: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(d);
@@ -158,14 +181,20 @@ begin
   list := TListCardNameData.Create;
   tn := getTextTableName(ALang);
   query.Clear;
-  query.SQL.Text:= 'select id, name from '+tn+' where name like ''%'+AName+'%'' limit 10';
-  query.Open;
-  while not query.EOF do begin
-    item := TCardNameData.Create;
-    item.id:= query.FieldByName('id').AsInteger;
-    item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    list.Add(item);
-    query.Next;
+  query.SQL.Text:= 'select id, name from '+tn+' where name like ''%'+ToDBStr(AName)+'%'' limit 10';
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetCardList: '+ E.Message);
+    end;
   end;
   query.Clear;
   Exit(list);
@@ -179,9 +208,15 @@ begin
   tn := getTextTableName(ALang);
   query.Clear;
   query.SQL.Text:= 'select id from '+tn+' where id >= 10000 and id <= 99999999 order by RANDOM() limit 1';
-  query.Open;
-  if (not query.EOF) then begin
-    id := query.FieldByName('id').AsInteger;
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      id := query.FieldByName('id').AsInteger;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetRandomCard: ' + E.Message);
+    end;
   end;
   query.Clear;
   if (id <> -1) then begin
@@ -202,14 +237,20 @@ begin
   tn := getTextTableName(ALang);
   if (AByEffect) then kf := 'desc';
   query.Clear;
-  query.SQL.Text:= 'select id, name from '+tn+' where '+kf+' like ''%'+AKey+'%'' limit 100';
-  query.Open;
-  while not query.EOF do begin
-    item := TCardNameData.Create;
-    item.id:= query.FieldByName('id').AsInteger;
-    item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    list.Add(item);
-    query.Next;
+  query.SQL.Text:= 'select id, name from '+tn+' where '+kf+' like ''%'+ToDBStr(AKey)+'%'' limit 100';
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doYdkFindCardList: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(list);
@@ -233,14 +274,19 @@ begin
   end;
   inStr:= inStr.TrimRight([',']);
   query.SQL.Text:= 'select id, name from '+tn+' where id in ('+inStr+')';
-  query.Open;
-
-  while not query.EOF do begin
-    item := TCardNameData.Create;
-    item.id:= query.FieldByName('id').AsInteger;
-    item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
-    list.Add(item);
-    query.Next;
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doYdkGetNamesByIds: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(list);
@@ -252,9 +298,15 @@ var
 begin
   query.Clear;
   query.SQL.Text:= 'select count(1) ''count'' from datas';
-  query.Open;
-  if not query.EOF then begin
-    cnt := query.FieldByName('count').AsInteger;
+  try
+    query.Open;
+    if not query.EOF then begin
+      cnt := query.FieldByName('count').AsInteger;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetCardCount: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(cnt);

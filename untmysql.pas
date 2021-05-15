@@ -5,7 +5,7 @@ unit untMySQL;
 interface
 
 uses
-  Classes, SysUtils, mysql57conn, SQLDB, untEnv, RegExpr, untStringExtension;
+  Classes, SysUtils, mysql57conn, SQLDB, untEnv, RegExpr, untStringExtension, untLogger;
 
 procedure initMySQL();
 procedure freeMySQL();
@@ -83,11 +83,17 @@ begin
   reconnect();
   query.Clear;
   query.SQL.Text:= 'select count(1) ''count'' from YGOCardName';
-  query.Open;
-  if not query.EOF then begin
-    cnt := query.FieldByName('count').AsInteger;
+  try
+    query.Open;
+    if not query.EOF then begin
+      cnt := query.FieldByName('count').AsInteger;
+    end;
+    query.Clear;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetKanaCount: ' + E.Message);
+    end;
   end;
-  query.Clear;
   Exit(cnt);
 end;
 
@@ -98,9 +104,15 @@ begin
   reconnect();
   query.Clear;
   query.SQL.Text:= 'select count(1) ''count'' from YGOSetName';
-  query.Open;
-  if not query.EOF then begin
-    cnt := query.FieldByName('count').AsInteger;
+  try
+    query.Open;
+    if not query.EOF then begin
+      cnt := query.FieldByName('count').AsInteger;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetSetCount: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(cnt);
@@ -113,9 +125,15 @@ begin
   reconnect();
   query.Clear;
   query.SQL.Text:= 'select kk from YGOCardName where kanji = ''%s'' or kanji = ''%s'''.Format([aname, toDBC(aname)]);
-  query.Open;
-  if (not query.EOF) then begin
-    ret := toCardName(query.FieldByName('kk').AsString);
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      ret := toCardName(query.FieldByName('kk').AsString);
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'getNameKanjiKana: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(ret);
@@ -128,9 +146,15 @@ begin
   reconnect();
   query.Clear;
   query.SQL.Text:= 'select kk from YGOSetName where kanji = ''%s'' or kanji = ''%s'''.Format([asetname, toDBC(asetname)]);
-  query.Open;
-  if (not query.EOF) then begin
-    ret := toCardName(query.FieldByName('kk').AsString);
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      ret := toCardName(query.FieldByName('kk').AsString);
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'getSetKanjiKana: ' + E.Message);
+    end;
   end;
   query.Clear;
   Exit(ret);
@@ -159,7 +183,6 @@ begin
       isToken:= True;
       tmp := tmp.Replace('トークン', '', [rfReplaceAll]);
     end;
-
     kk := getNameKanjiKana(tmp);
     if (kk = '') then begin
       kk := getSetKanjiKana(tmp);

@@ -22,6 +22,7 @@ const
 var
   workPath: String = '';
   filePath: string = '';
+  logPath: string = '';
 
 implementation
 

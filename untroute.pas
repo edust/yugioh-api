@@ -9,6 +9,7 @@ uses
   untDataConvert, untStringExtension, untExternalExecutor, httpprotocol, untLogger;
 
 procedure index(AReq: TRequest; AResp: TResponse);
+procedure favicon(AReq: TRequest; AResp: TResponse);
 procedure systemStatus(AReq: TRequest; AResp: TResponse);
 procedure searchCards(AReq: TRequest; AResp: TResponse);
 procedure getOneCard(AReq: TRequest; AResp: TResponse);
@@ -76,13 +77,27 @@ begin
   json.Free;
 end;
 
+procedure favicon(AReq: TRequest; AResp: TResponse);
+begin
+  try
+    AResp.ContentType:= 'image/x-icon';
+    AResp.SetCustomHeader('Accept-Ranges', 'bytes');
+    AResp.ContentStream := TMemoryStream.Create;
+    TMemoryStream(AResp.ContentStream).LoadFromFile(workPath + 'favicon.ico');
+    AResp.ContentLength:= AResp.ContentStream.Size;
+    AResp.SendContent;
+  finally
+    AResp.ContentStream.Free;
+  end;
+end;
+
 procedure systemStatus(AReq: TRequest; AResp: TResponse);
 begin
-  log(lvInfo, 'systemStatus');
+  log(lvInfo, AReq, 'systemStatus');
   AResp.Code:= 200;
   AResp.ContentType:= 'text/plain';
   AResp.Content:= Format('%s [OK]', [FormatDateTime('yyyy-MM-dd hh:mm:ss', Now)]);
-  log(lvInfo, 'systemStatus[end]');
+  log(lvInfo, AReq, 'systemStatus[end]');
 end;
 
 procedure searchCards(AReq: TRequest; AResp: TResponse);
@@ -94,7 +109,7 @@ var
 begin
   allowCors(AReq, AResp);
   extractSearchParams(AReq.Content, AKey, ACardType, AAttr, AIcon, ASubType, ARace, AMonsterType, ALang);
-  log(lvInfo, 'searchCards: ' + AKey);
+  log(lvInfo, AReq, 'searchCards: ' + AKey);
   if (ALang = '') then ALang:= 'jp';
   AResp.ContentType:= 'application/json';
   list := doSearchCardData(AKey, ACardType, AAttr, AIcon, ASubType, ARace, AMonsterType, ALang);
@@ -106,7 +121,7 @@ begin
     end;
     list.FreeList;
     AResp.Content:= retJson;
-    log(lvInfo, 'searchCards[end]');
+    log(lvInfo, AReq, 'searchCards[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -115,7 +130,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'searchCards[end][no result found]');
+  log(lvInfo, AReq, 'searchCards[end][no result found]');
 end;
 
 procedure getOneCard(AReq: TRequest; AResp: TResponse);
@@ -129,7 +144,7 @@ begin
   allowCors(AReq, AResp);
   apass := AReq.RouteParams['password'].Trim;
   alang := AReq.QueryFields.Values['lang'].Trim;
-  log(lvInfo, 'getOneCard: ' + apass + ', lang: ' + alang);
+  log(lvInfo, AReq, 'getOneCard: ' + apass + ', lang: ' + alang);
   if (alang = '') then alang := 'jp';
   AResp.ContentType := 'application/json';
   if (apass = '') then begin
@@ -139,7 +154,7 @@ begin
       Free;
     end;
     AResp.Content := retJson;
-    log(lvInfo, 'getOneCard[end][no card id]');
+    log(lvInfo, Areq, 'getOneCard[end][no card id]');
     Exit;
   end;
   apassInt := StrToIntDef(apass, 0);
@@ -150,7 +165,7 @@ begin
       Free;
     end;
     AResp.Content := retJson;
-    log(lvInfo, 'getOneCard[end][card id must be an integer]');
+    log(lvInfo, AReq, 'getOneCard[end][card id must be an integer]');
     Exit;
   end;
   cardinfo := doGetOneCard(apassInt, alang);
@@ -162,7 +177,7 @@ begin
     end;
     cardinfo.Free;
     AResp.Content := retJson;
-    log(lvInfo, 'getOneCard[end]');
+    log(lvInfo, AReq, 'getOneCard[end]');
     Exit;
   end;
   AResp.Code := 200;
@@ -171,7 +186,7 @@ begin
     Free;
   end;
   AResp.Content := retJson;
-  log(lvInfo, 'getOneCard[end][card not found]');
+  log(lvInfo, AReq, 'getOneCard[end][card not found]');
 end;
 
 procedure getCardList(AReq: TRequest; AResp: TResponse);
@@ -179,12 +194,12 @@ var
   aname: string;
   alang: string;
   retJson: String;
-  list: TListCardNameData;
+  list: TListCardNameData = nil;
 begin
   allowCors(AReq, AResp);
   aname := AReq.QueryFields.Values['name'].Trim;
   alang := Areq.QueryFields.Values['lang'].Trim;
-  log(lvInfo, 'getCardList: ' + aname);
+  log(lvInfo, AReq, 'getCardList: ' + aname);
   AResp.Code:= 200;
   AResp.ContentType:= 'application/json';
   if (aname = '') then begin
@@ -193,7 +208,7 @@ begin
       Free;
     end;
     AResp.Content:= retJson;
-    log(lvInfo, 'getCardList[end][empty]');
+    log(lvInfo, AReq, 'getCardList[end][empty]');
     Exit;
   end;
   if (alang = '') then alang:= 'jp';
@@ -206,7 +221,7 @@ begin
     end;
     list.FreeList;
     AResp.Content:= retJson;
-    log(lvInfo, 'getCardList[end]');
+    log(lvInfo, AReq, 'getCardList[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -215,7 +230,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'getCardList[end][no result found]');
+  log(lvInfo, AReq, 'getCardList[end][no result found]');
 end;
 
 procedure getRandomCard(AReq: TRequest; AResp: TResponse);
@@ -226,7 +241,7 @@ var
 begin
   allowCors(AReq, AResp);
   alang := Areq.QueryFields.Values['lang'].Trim;
-  log(lvInfo, 'getRandomCard: ' + alang);
+  log(lvInfo, AReq, 'getRandomCard: ' + alang);
   if (alang = '') then alang:= 'jp';
   card := doGetRandomCard(alang);
   if (card <> nil) then begin
@@ -237,7 +252,7 @@ begin
     card.Free;
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'getRandomCard[end]');
+    log(lvInfo, AReq, 'getRandomCard[end]');
     Exit;
   end;
   AResp.Code:= 500;
@@ -246,7 +261,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'getRandomCard[end][no result found]');
+  log(lvInfo, AReq, 'getRandomCard[end][no result found]');
 end;
 
 procedure extractFindCardParam(jsonstr: string; out AByEffect: Boolean; out AKey: string; out ALang: string);
@@ -272,7 +287,7 @@ var
 begin
   allowCors(AReq, AResp);
   extractFindCardParam(AReq.Content, AByEffect, AKey, ALang);
-  log(lvInfo, 'ydkFindCard: ' + BoolToStr(AByEffect) + ', key: ' + AKey);
+  log(lvInfo, AReq, 'ydkFindCard: ' + BoolToStr(AByEffect) + ', key: ' + AKey);
   if (ALang = '') then ALang:= 'jp';
   if (AKey = '') then begin
     AResp.Code:= 500;
@@ -281,7 +296,7 @@ begin
       Free;
     end;
     AResp.Content:= retJson;
-    log(lvInfo, 'ydkFindCard[end][no key]');
+    log(lvInfo, AReq, 'ydkFindCard[end][no key]');
     Exit;
   end;
   list := doYdkFindCardList(AByEffect, AKey, ALang);
@@ -293,7 +308,7 @@ begin
     list.FreeList;
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'ydkFindCard[end]');
+    log(lvInfo, AReq, 'ydkFindCard[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -302,7 +317,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'ydkFindCard[end][empty]');
+  log(lvInfo, AReq, 'ydkFindCard[end][empty]');
 end;
 
 procedure extractGetNamesByIdsParam(jsonstr: string; AList: TStringList; out Alang: string);
@@ -333,7 +348,7 @@ begin
   allowCors(AReq, AResp);
   AList := TStringList.Create;
   extractGetNamesByIdsParam(AReq.Content, AList, ALang);
-  log(lvInfo, 'ydkGetNamesByIds: ' + IntToStr(AList.Count) + ', lang: ' + ALang);
+  log(lvInfo, AReq, 'ydkGetNamesByIds: ' + IntToStr(AList.Count) + ', lang: ' + ALang);
   if (ALang = '') then ALang:= 'jp';
   if (AList.Count = 0) then begin
     AList.Free;
@@ -343,7 +358,7 @@ begin
       Free;
     end;
     AResp.Content:= retJson;
-    log(lvInfo, 'ydkGetNamesByIds[end][no card id]');
+    log(lvInfo, AReq, 'ydkGetNamesByIds[end][no card id]');
     Exit;
   end;
 
@@ -358,7 +373,7 @@ begin
     list.FreeList();
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'ydkGetNamesByIds[end]');
+    log(lvInfo, AReq, 'ydkGetNamesByIds[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -367,7 +382,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'ydkGetNamesByIds[end][empty]');
+  log(lvInfo, AReq, 'ydkGetNamesByIds[end][empty]');
 end;
 
 procedure getCommonCount(AReq: TRequest; AResp: TResponse);
@@ -375,7 +390,7 @@ var
   cardCount, kanaCount, setCount: Integer;
   retJson: string;
 begin
-  log(lvInfo, 'getCommonCount');
+  log(lvInfo, AReq, 'getCommonCount');
   allowCors(AReq, AResp);
   cardCount:= doGetCardCount();
   kanaCount:= doGetKanaCount();
@@ -386,7 +401,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'getCommonCount[end]');
+  log(lvInfo, AReq, 'getCommonCount[end]');
 end;
 
 procedure extractKKNameParam(jsonstr: string; out AName: string);
@@ -409,7 +424,7 @@ var
 begin
   allowCors(AReq, AResp);
   extractKKNameParam(AReq.Content, aname);
-  log(lvInfo, 'kkCardName: ' + aname);
+  log(lvInfo, AReq, 'kkCardName: ' + aname);
   if (aname = '') then begin
     with TRespData.Create(500, 'content is null.') do begin
       retJson:= toJSON();
@@ -417,7 +432,7 @@ begin
     end;
     AResp.Code:= 500;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkCardName[end][content is null]');
+    log(lvInfo, AReq, 'kkCardName[end][content is null]');
     Exit;
   end;
   aname:= removeKana(aname);
@@ -429,7 +444,7 @@ begin
     end;
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkCardName[end]');
+    log(lvInfo, AReq, 'kkCardName[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -438,7 +453,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'kkCardName[end][not found]');
+  log(lvInfo, AReq, 'kkCardName[end][not found]');
 end;
 
 procedure kkCardEffect(AReq: TRequest; AResp: TResponse);
@@ -449,7 +464,7 @@ var
 begin
   allowCors(AReq, AResp);
   extractKKNameParam(AReq.Content, aname);
-  log(lvInfo, 'kkCardEffect: ' + aname);
+  log(lvInfo, AReq, 'kkCardEffect: ' + aname);
   if (aname = '') then begin
     with TRespData.Create(500, 'content is null.') do begin
       retJson:= toJSON();
@@ -457,7 +472,7 @@ begin
     end;
     AResp.Code:= 500;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkCardEffect[end][content is null]');
+    log(lvInfo, AReq, 'kkCardEffect[end][content is null]');
     Exit;
   end;
   aname:= removeKana(aname);
@@ -469,7 +484,7 @@ begin
     end;
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkCardEffect[end]');
+    log(lvInfo, AReq, 'kkCardEffect[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -478,7 +493,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'kkCardEffect[end][not found]');
+  log(lvInfo, AReq, 'kkCardEffect[end][not found]');
 end;
 
 procedure kkNormalText(AReq: TRequest; AResp: TResponse);
@@ -489,7 +504,7 @@ var
 begin
   allowCors(AReq, AResp);
   extractKKNameParam(AReq.Content, aname);
-  log(lvInfo, 'kkNormalText: ' + aname);
+  log(lvInfo, AREq, 'kkNormalText: ' + aname);
   if (aname = '') then begin
     with TRespData.Create(500, 'content is null.') do begin
       retJson:= toJSON();
@@ -497,7 +512,7 @@ begin
     end;
     AResp.Code:= 500;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkNormalText[end][content is null]');
+    log(lvInfo, AReq, 'kkNormalText[end][content is null]');
     Exit;
   end;
   aname:= removeKana(aname);
@@ -509,7 +524,7 @@ begin
     end;
     AResp.Code:= 200;
     AResp.Content:= retJson;
-    log(lvInfo, 'kkNormalText[end]');
+    log(lvInfo, AReq, 'kkNormalText[end]');
     Exit;
   end;
   AResp.Code:= 200;
@@ -518,7 +533,7 @@ begin
     Free;
   end;
   AResp.Content:= retJson;
-  log(lvInfo, 'kkNormalText[end][not found]');
+  log(lvInfo, AReq, 'kkNormalText[end][not found]');
 end;
 
 end.

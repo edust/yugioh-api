@@ -27,9 +27,29 @@ type
 procedure showRequestException(AResponse: TResponse; AnException: Exception; var handled: boolean);
 begin
   log(lvError, 'showRequestException: ' + AnException.Message);
+  if (AnException.Message.ToLower.Contains('access violation')) then begin
+    // reset sqlite
+    try
+      freeDatabase();
+      log(lvInfo, 'Release SQLITE Database');
+    except
+      on E: Exception do begin
+        log(lvError, 'Release SQLITE Database Error: ' + E.Message);
+      end;
+    end;
+    try
+      initDatabase();
+      log(lvInfo, 'Reset SQLITE Database.');
+    except
+      on E: Exception do begin
+        log(lvError, 'Reset SQLITE Database Error: ' + E.Message);
+      end;
+    end;
+  end;
   AResponse.Code:= 500;
   AResponse.ContentType:= 'application/json';
   AResponse.Content:= '{"error": "%s"}'.Format([StrToJSONEncoded(AnException.Message)]);
+
   handled:= True;
 end;
 
@@ -54,9 +74,14 @@ begin
   if (workPath.EndsWith('./')) then begin
     workPath:= workPath.Substring(0, workPath.Length - 2);
   end;
-  WriteLn(workPath);
+  WriteLn('workPath: ' + workPath);
   filePath:= workPath + 'files/';
-  WriteLn(filePath);
+  WriteLn('filePath: ' + filePath);
+  logPath:= workPath + 'logs/';
+  if (not DirectoryExists(logPath)) then begin
+    ForceDirectories(logPath);
+  end;
+  WriteLn('logPath: ' + logPath);
 
   // database
   initDatabase();
@@ -68,6 +93,7 @@ begin
 
   // common
   HTTPRouter.RegisterRoute('/', rmAll, @index);
+  HTTPRouter.RegisterRoute('/favicon.ico', rmAll, @favicon);
   HTTPRouter.RegisterRoute('/system/status', rmAll, @systemStatus);
   HTTPRouter.RegisterRoute('/api/common/count', rmAll, @getCommonCount);
 

@@ -6,6 +6,9 @@ build/
 backup/
 out/
 ygosvr
+logs/
+dbconv
+*.dSYM/
 
 *.o
 *.ppu

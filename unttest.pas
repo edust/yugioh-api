@@ -5,9 +5,8 @@ unit untTest;
 interface
 
 uses
-  Classes, SysUtils, untDataObj, untRoute, untDatabase, RegExpr, LazUTF8, untStringExtension, untMySQL;
+  Classes, SysUtils, untDataObj, RegExpr, LazUTF8, untStringExtension, untMySQL;
 
-procedure testIndex();
 procedure testGetOneCard();
 procedure testSearchCard();
 procedure testJsonArray();
@@ -17,18 +16,18 @@ procedure testEffectCardName();
 
 implementation
 
-procedure testIndex();
-begin
-
-end;
 
 procedure testGetOneCard();
 var
   cardinfo: TCardData;
 begin
   cardinfo := doGetOneCard(43228023, 'jp');
-  WriteLn(cardinfo.toJSON());
-  cardinfo.Free;
+  if (cardinfo <> nil) then begin
+    WriteLn(cardinfo.toJSON());
+    cardinfo.Free;
+  end else begin
+    WriteLn('testGetOneCard: nil');
+  end;
 end;
 
 procedure testSearchCard();
@@ -36,30 +35,33 @@ var
   list: TListCardData;
 begin
   list := doSearchCardData('青眼', $1, 0, 0, 0, $2000,0,'jp');
-  WriteLn(list.toJSON());
-  list.freeList();
+  if (list <> nil) then begin
+    WriteLn(list.toJSON());
+    list.freeList();
+  end else begin
+    WriteLn('testSearchCard: nil');
+  end;
 end;
 
 procedure testJsonArray();
 var
-  jsonstr: string = '{"ids":[2129638,9433350,20654247], "lang":"jp"}';
   alist: TStringList;
-  alang: string;
-  i: Integer;
   list: TListCardNameData;
 begin
   alist := TStringList.Create;
-  extractGetNamesByIdsParam(jsonstr, alist, alang);
-  for i:= 0 to alist.Count - 1 do begin
-    WriteLn(alist[i]);
+  alist.Add('2129638');
+  alist.Add('9433350');
+  alist.Add('20654247');
+
+  list := doYdkGetNamesByIds(alist, 'jp');
+  if (list <> nil) then begin
+    WriteLn(list.toJSON());
+    list.Free;
+  end else begin
+    WriteLn('testJsonArray: nil');
   end;
 
-  list := doYdkGetNamesByIds(alist, alang);
-  WriteLn(list.toJSON());
-  list.Free;
-
   alist.Free;
-  WriteLn(alang);
 end;
 
 type

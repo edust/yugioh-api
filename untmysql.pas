@@ -5,10 +5,10 @@ unit untMySQL;
 interface
 
 uses
-  Classes, SysUtils, mysql57conn, SQLDB, untEnv, RegExpr, untStringExtension, untLogger;
+  Classes, SysUtils, mysql57conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, untLogger, DateUtils;
 
-procedure initMySQL();
-procedure freeMySQL();
+procedure initMySQL(out conn: TMySQL57Connection; out query: TSQLQuery; out trans: TSQLTransaction);
+procedure freeMySQL(conn: TMySQL57Connection; query: TSQLQuery; trans: TSQLTransaction);
 
 function doGetKanaCount(): Integer;
 function doGetSetCount(): Integer;
@@ -16,60 +16,67 @@ function getNameKanjiKana(aname: string): string;
 function getSetKanjiKana(asetname: string): string;
 function getEffectKanjiKana(aname: string): string;
 
+// port from sqlite
+function doSearchCardData(AKey: string; ACardType: Integer; AAttr: Integer; AIcon: Integer; ASubType: Integer; ARace: Integer; AMonsterType: Integer; ALang: string): TListCardData;
+function doGetOneCard(APassword: Integer; ALang: string): TCardData;
+function doGetCardList(AName: string; ALang: string): TListCardNameData;
+function doGetRandomCard(ALang: string): TCardData;
+function doYdkFindCardList(AByEffect: Boolean; AKey: string; ALang: string): TListCardNameData;
+function doYdkGetNamesByIds(AIds: TStringList; ALang: string): TListCardNameData;
+function doGetCardCount(): Integer;
+
+function doGetLastSyncDate(): string;
+
 implementation
 
+procedure initMySQL(out conn: TMySQL57Connection; out query: TSQLQuery; out
+  trans: TSQLTransaction);
 var
-  mysql: TMySQL57Connection = nil;
-  trans: TSQLTransaction = nil;
-  query: TSQLQuery = nil;
-
-procedure reconnect();
-var
-  st: string;
+  succ: Boolean;
 begin
-  st := mysql.ServerStatus.ToLower;
-  if (st.Contains('lost connection') or st.Contains('gone away')) then begin
-    mysql.Close(True);
-    mysql.Open;
-  end;
-end;
-
-procedure initMySQL();
-begin
-  mysql := TMySQL57Connection.Create(nil);
-  mysql.SkipLibraryVersionCheck:= True;
+  conn := TMySQL57Connection.Create(nil);
+  conn.SkipLibraryVersionCheck:= True;
   trans := TSQLTransaction.Create(nil);
-  mysql.Transaction := trans;
-  mysql.HostName:= MYSQL_HOST;
-  mysql.Port:= MYSQL_PORT;
-  mysql.LoginPrompt:= False;
-  mysql.CharSet:= 'utf8mb4';
-  mysql.UserName:= MYSQL_USER;
-  mysql.Password:= MYSQL_PASSWORD;
-  mysql.DatabaseName:= 'YugiohAPI';
-  mysql.Params.Add('autoReconnect=true');
-  mysql.Params.Add('failOverReadOnly=false');
+  conn.Transaction := trans;
+  conn.HostName:= MYSQL_HOST;
+  conn.Port:= MYSQL_PORT;
+  conn.LoginPrompt:= False;
+  conn.CharSet:= 'utf8';
+  conn.UserName:= MYSQL_USER;
+  conn.Password:= MYSQL_PASSWORD;
+  conn.DatabaseName:= 'YugiohAPI';
   try
-    mysql.Open;
-    WriteLn('MySQL Opened,');
+    conn.Open;
+    succ := True;
   except
     on E: Exception do begin
-      WriteLn('Open MYSQL Failed, reason: ' + E.Message);
+      succ:= False;
+      log(lvError, 'Open MYSQL Failed, reason: ' + E.Message);
     end;
   end;
-  query := TSQLQuery.Create(nil);
-  query.DataBase := mysql;
+  if (not succ) then begin
+    // connect failed, free all components
+    conn.Free;
+    trans.Free;
+    conn := nil;
+    trans := nil;
+    query := nil;
+  end else begin
+    query := TSQLQuery.Create(nil);
+    query.DataBase := conn;
+  end;
 end;
 
-procedure freeMySQL();
+procedure freeMySQL(conn: TMySQL57Connection; query: TSQLQuery;
+  trans: TSQLTransaction);
 begin
   if (query <>  nil) then begin
     query.Clear;
     query.Free;
   end;
-  if (mysql <> nil) then begin
-    mysql.Close(True);
-    mysql.Free;
+  if (conn <> nil) then begin
+    conn.Close(True);
+    conn.Free;
   end;
   if (trans <> nil) then begin
     trans.Free;
@@ -78,9 +85,13 @@ end;
 
 function doGetKanaCount(): Integer;
 var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
   cnt: Integer = 0;
 begin
-  reconnect();
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(0);
   query.Clear;
   query.SQL.Text:= 'select count(1) ''count'' from YGOCardName';
   try
@@ -94,14 +105,19 @@ begin
       log(lvError, 'doGetKanaCount: ' + E.Message);
     end;
   end;
+  freeMySQL(conn, query,trans);
   Exit(cnt);
 end;
 
 function doGetSetCount(): Integer;
 var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
   cnt: Integer = 0;
 begin
-  reconnect();
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(0);
   query.Clear;
   query.SQL.Text:= 'select count(1) ''count'' from YGOSetName';
   try
@@ -115,19 +131,24 @@ begin
     end;
   end;
   query.Clear;
+  freeMySQL(conn, query,trans);
   Exit(cnt);
 end;
 
 function getNameKanjiKana(aname: string): string;
 var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
   ret: string = '';
 begin
-  reconnect();
-  query.Clear;
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit('');
+  query.Close;
   query.SQL.Text:= 'select kk from YGOCardName where kanji = ''%s'' or kanji = ''%s'''.Format([aname, toDBC(aname)]);
   try
     query.Open;
-    if (not query.EOF) then begin
+    if (query.RecordCount > 0) then begin
       ret := toCardName(query.FieldByName('kk').AsString);
     end;
   except
@@ -135,15 +156,20 @@ begin
       log(lvError, 'getNameKanjiKana: ' + E.Message);
     end;
   end;
-  query.Clear;
+  query.Close;
+  freeMySQL(conn, query,trans);
   Exit(ret);
 end;
 
 function getSetKanjiKana(asetname: string): string;
 var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
   ret: string = '';
 begin
-  reconnect();
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit('');
   query.Clear;
   query.SQL.Text:= 'select kk from YGOSetName where kanji = ''%s'' or kanji = ''%s'''.Format([asetname, toDBC(asetname)]);
   try
@@ -157,6 +183,7 @@ begin
     end;
   end;
   query.Clear;
+  freeMySQL(conn, query,trans);
   Exit(ret);
 end;
 
@@ -169,7 +196,6 @@ var
   tmp: string;
   kk: string;
 begin
-  reconnect();
   cn := effectCardNames(aname);
   e2 := aname;
   for i := 0 to Length(cn) - 1 do begin
@@ -192,6 +218,318 @@ begin
     e2 := e2.Replace(Format('{{%d}}', [i]), kk, [rfReplaceAll]);
   end;
   Exit(e2);
+end;
+
+function ToDBStr(str: string): string;
+begin
+  Exit(str
+    .Replace('''', '''''', [rfIgnoreCase, rfReplaceAll])
+    .Replace(#13, '', [rfReplaceAll, rfIgnoreCase])
+    .Replace(#10, '', [rfIgnoreCase, rfReplaceAll])
+  );
+end;
+
+function getTextTableName(ALang: string): string;
+var
+  tn: string = 'ja_texts';
+begin
+  case ALang of
+  'sc': tn := 'zhcn_texts';
+  'tc': tn := 'zhtw_texts';
+  'en': tn := 'texts';
+  'kr': tn := 'ko_texts';
+  'de': tn := 'de_texts';
+  'es': tn := 'es_texts';
+  'fr': tn := 'fr_texts';
+  'it': tn := 'it_texts';
+  'th': tn := 'th_texts';
+  'vi': tn := 'vi_texts';
+  end;
+  Exit(tn);
+end;
+
+function doSearchCardData(AKey: string; ACardType: Integer; AAttr: Integer;
+  AIcon: Integer; ASubType: Integer; ARace: Integer; AMonsterType: Integer;
+  ALang: string): TListCardData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  sql: string;
+  list: TListCardData;
+  item: TCardData;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  list := TListCardData.Create;
+  tn := getTextTableName(ALang);
+  sql := 'select t.id, t.name, t.desc, d.type, d.atk, d.def, d.level, d.race, d.attribute, d.setid from '+tn+' t join datas d on t.id = d.id where 1 = 1';
+  AKey:= AKey.Replace('''', '''''');
+  if (AKey.Trim() <> '') then sql += ' and (t.name like ''%'+ ToDBStr(AKey) +'%'' or t.desc like ''%'+ ToDBStr(AKey) + '%'')';
+  if (ACardType <> 0) then sql += ' and d.type & %d'.Format([ACardType]);
+  if (AAttr <> 0) then sql += ' and d.attribute & %d'.Format([AAttr]);
+  if (AIcon <> 0) then sql += ' and d.type & %d'.Format([AIcon]);
+  if (ASubType <> 0) then sql += ' and d.type & %d'.Format([ASubType]);
+  if (ARace <> 0) then sql += ' and d.race & %d'.Format([ARace]);
+  if (AMonsterType <> 0) then sql += ' and d.type & %d'.Format([AMonsterType]);
+  query.Clear;
+  query.SQL.Text:= sql;
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      item.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      item.&type:= query.FieldByName('type').AsInteger;
+      item.atk:= query.FieldByName('atk').AsInteger;
+      item.def:= query.FieldByName('def').AsInteger;
+      item.level:= query.FieldByName('level').AsInteger;
+      item.race:= query.FieldByName('race').AsInteger;
+      item.attribute:= query.FieldByName('attribute').AsInteger;
+      item.setid:= query.FieldByName('setid').AsString;
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doSearchCardData: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(list);
+end;
+
+function doGetOneCard(APassword: Integer; ALang: string): TCardData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  d: TCardData = nil;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  tn := getTextTableName(ALang);
+  query.Clear;
+  query.SQL.Text:= 'select t.id, t.name, t.desc, d.type, d.atk, d.def, d.level, d.race, d.attribute, d.setid from %s t join datas d on t.id = d.id where t.id = %d'.Format([tn, APassword]);
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      d := TCardData.Create;
+      d.id:= query.FieldByName('id').AsInteger;
+      d.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      d.desc:= query.FieldByName('desc').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      d.&type:= query.FieldByName('type').AsInteger;
+      d.atk:= query.FieldByName('atk').AsInteger;
+      d.def:= query.FieldByName('def').AsInteger;
+      d.level:= query.FieldByName('level').AsInteger;
+      d.race:= query.FieldByName('race').AsInteger;
+      d.attribute:= query.FieldByName('attribute').AsInteger;
+      d.setid:= query.FieldByName('setid').AsString;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetOneCard: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(d);
+end;
+
+function doGetCardList(AName: string; ALang: string): TListCardNameData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  list: TListCardNameData;
+  item: TCardNameData;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  list := TListCardNameData.Create;
+  tn := getTextTableName(ALang);
+  query.Clear;
+  query.SQL.Text:= 'select id, name from '+tn+' where name like ''%'+ToDBStr(AName)+'%'' limit 0,10';
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetCardList: '+ E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(list);
+end;
+
+function doGetRandomCard(ALang: string): TCardData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  id: Integer = -1;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  tn := getTextTableName(ALang);
+  query.Clear;
+  query.SQL.Text:= 'select id from '+tn+' where id >= 10000 and id <= 99999999 order by RAND() limit 0,1';
+  try
+    query.Open;
+    if (not query.EOF) then begin
+      id := query.FieldByName('id').AsInteger;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetRandomCard: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  if (id <> -1) then begin
+    Exit(doGetOneCard(id, ALang));
+  end else begin
+    Exit(nil);
+  end;
+end;
+
+function doYdkFindCardList(AByEffect: Boolean; AKey: string; ALang: string): TListCardNameData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  kf: string = 'name';
+  list: TListCardNameData;
+  item: TCardNameData;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  list := TListCardNameData.Create;
+  tn := getTextTableName(ALang);
+  if (AByEffect) then kf := 'desc';
+  query.Clear;
+  query.SQL.Text:= 'select id, name from '+tn+' where '+kf+' like ''%'+ToDBStr(AKey)+'%'' limit 0,100';
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doYdkFindCardList: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(list);
+end;
+
+function doYdkGetNamesByIds(AIds: TStringList; ALang: string
+  ): TListCardNameData;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  tn: string;
+  list: TListCardNameData;
+  item: TCardNameData;
+  inStr: string = '';
+  i: Integer;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(nil);
+  list := TListCardNameData.Create;
+  tn := getTextTableName(ALang);
+  query.Clear;
+
+  for i := 0 to AIds.Count - 1 do begin
+    inStr += '%s,'.Format([AIds[i]]);
+  end;
+  inStr:= inStr.TrimRight([',']);
+  query.SQL.Text:= 'select id, name from '+tn+' where id in ('+inStr+')';
+  try
+    query.Open;
+    while not query.EOF do begin
+      item := TCardNameData.Create;
+      item.id:= query.FieldByName('id').AsInteger;
+      item.name:= query.FieldByName('name').AsString.Replace('&#64025;', '神', [rfReplaceAll]);
+      list.Add(item);
+      query.Next;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doYdkGetNamesByIds: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(list);
+end;
+
+function doGetCardCount(): Integer;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  cnt: Integer = 0;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit(0);
+  query.Clear;
+  query.SQL.Text:= 'select count(1) ''count'' from datas';
+  try
+    query.Open;
+    if not query.EOF then begin
+      cnt := query.FieldByName('count').AsInteger;
+    end;
+  except
+    on E: Exception do begin
+      log(lvError, 'doGetCardCount: ' + E.Message);
+    end;
+  end;
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(cnt);
+end;
+
+function doGetLastSyncDate(): string;
+var
+  conn: TMySQL57Connection;
+  query: TSQLQuery;
+  trans: TSQLTransaction;
+  dtStr: string = 'unknown';
+  dtLong: LongInt;
+  dt: TDateTime;
+begin
+  initMySQL(conn, query, trans);
+  if (conn = nil) then Exit('');
+  query.Clear;
+  query.SQL.Text:= 'select lastsync from YGOSync';
+  query.Open;
+  dtLong := query.FieldByName('lastsync').AsInteger;
+  dt := UnixToDateTime(dtLong, False);
+  dtStr:= FormatDateTime('yyyy-MM-dd hh:mm:ss', dt);
+  query.Clear;
+  freeMySQL(conn, query, trans);
+  Exit(dtStr);
 end;
 
 end.

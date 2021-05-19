@@ -9,6 +9,9 @@ ygosvr
 logs/
 dbconv
 *.dSYM/
+kanaAnalysis
+NoKana.txt
+
 
 *.o
 *.ppu

@@ -148,7 +148,7 @@ begin
   query.SQL.Text:= 'select kk from YGOCardName where kanji = ''%s'' or kanji = ''%s'''.Format([aname, toDBC(aname)]);
   try
     query.Open;
-    if (query.RecordCount > 0) then begin
+    if (not query.EOF) then begin
       ret := toCardName(query.FieldByName('kk').AsString);
     end;
   except
@@ -197,6 +197,7 @@ var
   kk: string;
 begin
   cn := effectCardNames(aname);
+  cn := sortByLength(cn);
   e2 := aname;
   for i := 0 to Length(cn) - 1 do begin
     e2 := e2.Replace(cn[i], '{{%d}}'.Format([i]), [rfReplaceAll, rfIgnoreCase]);
@@ -207,14 +208,14 @@ begin
     tmp := cn[i];
     if (tmp.EndsWith('トークン')) then begin
       isToken:= True;
-      tmp := tmp.Replace('トークン', '', [rfReplaceAll]);
     end;
     kk := getNameKanjiKana(tmp);
     if (kk = '') then begin
+      tmp := tmp.Replace('トークン', '', [rfReplaceAll]).Trim;
       kk := getSetKanjiKana(tmp);
       if (kk = '') then kk := kana(tmp);
     end;
-    if (isToken) then kk += 'トークン';
+    if (isToken) and (not kk.EndsWith('トークン')) then kk += 'トークン';
     e2 := e2.Replace(Format('{{%d}}', [i]), kk, [rfReplaceAll]);
   end;
   Exit(e2);

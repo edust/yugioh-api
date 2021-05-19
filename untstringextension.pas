@@ -16,6 +16,9 @@ function removeKana(str: string): string;
 
 function effectCardNames(str: string): TStringArray;
 function kana(str: string): string;
+function toDBData(str: string): string;
+
+function sortByLength(strs: TStringArray): TStringArray;
 
 implementation
 
@@ -224,6 +227,36 @@ begin
   ro.Free;
   reg.Free;
   Exit(ret);
+end;
+
+function toDBData(str: string): string;
+var
+  s: string;
+begin
+  s := toDBC(str).UReplace('．', '.', [rfIgnoreCase, rfReplaceAll]).UReplace('－', '-', [rfReplaceAll, rfIgnoreCase]).UTrim;
+  if (s.UContains('Fullwidth wordwrap|')) then begin
+    s := s.UReplace('Fullwidth wordwrap|', '', [rfIgnoreCase, rfReplaceAll]).UReplace('}}', '', [rfIgnoreCase, rfReplaceAll]);
+  end;
+  Exit(s);
+end;
+
+function sortImpl(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Exit(System.Length(List[Index2]) - System.Length([Index1]));
+end;
+
+function sortByLength(strs: TStringArray): TStringArray;
+var
+  alist: TStringList;
+  i: Integer;
+begin
+  alist := TStringList.Create;
+  for i := 0 to Length(strs) - 1 do begin
+    alist.Add(strs[i]);
+  end;
+  alist.CustomSort(@sortImpl);
+  Result := alist.ToStringArray;
+  alist.Free;
 end;
 
 end.

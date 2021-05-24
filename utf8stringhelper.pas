@@ -1071,6 +1071,5 @@ begin
   Exit(SysUtils.UpperCase(Self));
 end;
 
-
 end.
 

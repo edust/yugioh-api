@@ -62,7 +62,7 @@ begin
   http.OnDataReceived:= @evt.onDownloading;
   http.AllowRedirect:= True;
   try
-    http.Get('https://chocolatecannoli.com/database/OmegaDB.cdb', sqlitePath);
+    http.Get('https://duelistsunite.org/omega/OmegaDB.cdb', sqlitePath);
   except
     on E: Exception do begin
       DeleteFile(sqlitePath);

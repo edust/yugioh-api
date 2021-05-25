@@ -5,7 +5,7 @@ unit untMySQL;
 interface
 
 uses
-  Classes, SysUtils, mysql57conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, untLogger, DateUtils;
+  Classes, SysUtils, mysql57conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, untLogger, DateUtils, untExternalExecutor;
 
 procedure initMySQL(out conn: TMySQL57Connection; out query: TSQLQuery; out trans: TSQLTransaction);
 procedure freeMySQL(conn: TMySQL57Connection; query: TSQLQuery; trans: TSQLTransaction);
@@ -15,6 +15,7 @@ function doGetSetCount(): Integer;
 function getNameKanjiKana(aname: string): string;
 function getSetKanjiKana(asetname: string): string;
 function getEffectKanjiKana(aname: string): string;
+function getNormalKanjiKana(AName: string): string;
 
 // port from sqlite
 function doSearchCardData(AKey: string; ACardType: Integer; AAttr: Integer; AIcon: Integer; ASubType: Integer; ARace: Integer; AMonsterType: Integer; ALang: string): TListCardData;
@@ -203,6 +204,40 @@ begin
     e2 := e2.Replace(cn[i], '{{%d}}'.Format([i]), [rfReplaceAll, rfIgnoreCase]);
   end;
   e2 := kana(e2);
+  for i := 0 to Length(cn) - 1 do begin
+    isToken:= False;
+    tmp := cn[i];
+    if (tmp.EndsWith('トークン')) then begin
+      isToken:= True;
+    end;
+    kk := getNameKanjiKana(tmp);
+    if (kk = '') then begin
+      tmp := tmp.Replace('トークン', '', [rfReplaceAll]).Trim;
+      kk := getSetKanjiKana(tmp);
+      if (kk = '') then kk := kana(tmp);
+    end;
+    if (isToken) and (not kk.EndsWith('トークン')) then kk += 'トークン';
+    e2 := e2.Replace(Format('{{%d}}', [i]), kk, [rfReplaceAll]);
+  end;
+  Exit(e2);
+end;
+
+function getNormalKanjiKana(AName: string): string;
+var
+  cn: TStringArray;
+  e2: string;
+  i: Integer;
+  isToken: Boolean;
+  tmp: string;
+  kk: string;
+begin
+  cn := effectCardNames(AName);
+  cn := sortByLength(cn);
+  e2 := AName;
+  for i := 0 to Length(cn) - 1 do begin
+    e2 := e2.Replace(cn[i], '{{%d}}'.Format([i]), [rfReplaceAll, rfIgnoreCase]);
+  end;
+  e2 := doNormalKana(e2);
   for i := 0 to Length(cn) - 1 do begin
     isToken:= False;
     tmp := cn[i];

@@ -537,7 +537,7 @@ begin
     Exit;
   end;
   aname:= removeKana(aname);
-  akana:= doNormalKana(aname);
+  akana:= getNormalKanjiKana(aname);
   if (akana <> '') then begin
     with TRespJsonData.Create(200, 'found', '"%s"'.Format([StrToJSONEncoded(akana)])) do begin
       retJson := toJSON();

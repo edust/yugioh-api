@@ -1,0 +1,6 @@
+[Unit]
+Description=Yugioh Card Service
+[Service]
+ExecStart=/home/rarnu/Service/server/ygosvr
+[Install]
+WantedBy=multi-user.target

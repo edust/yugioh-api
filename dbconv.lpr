@@ -13,7 +13,7 @@ const
   MYSQL_PASSWORD = 'root';
 
 const
-  SQL_CREATE_DATAS = 'CREATE TABLE `datas` (`id` INT PRIMARY KEY NOT NULL DEFAULT 0, `ot` INT NOT NULL DEFAULT 0, `alias` INT NOT NULL DEFAULT 0, `setcode` INT NOT NULL DEFAULT 0, `type` INT NOT NULL DEFAULT 0, `atk` INT NOT NULL DEFAULT 0, `def` INT NOT NULL DEFAULT 0, `level` INT NOT NULL DEFAULT 0, `race` INT NOT NULL DEFAULT 0, `attribute` INT NOT NULL DEFAULT 0, `category` INT NOT NULL DEFAULT 0, `genre` INT NOT NULL DEFAULT 0, `setid` TEXT, `script` TEXT) character set utf8mb4;';
+  SQL_CREATE_DATAS = 'CREATE TABLE `datas` (`id` INT PRIMARY KEY NOT NULL DEFAULT 0, `ot` INT NOT NULL DEFAULT 0, `alias` INT NOT NULL DEFAULT 0, `setcode` INT NOT NULL DEFAULT 0, `type` INT NOT NULL DEFAULT 0, `atk` INT NOT NULL DEFAULT 0, `def` INT NOT NULL DEFAULT 0, `level` INT NOT NULL DEFAULT 0, `race` INT NOT NULL DEFAULT 0, `attribute` INT NOT NULL DEFAULT 0, `category` INT NOT NULL DEFAULT 0, `genre` INT NOT NULL DEFAULT 0, `setid` TEXT, `script` TEXT, `support` INT NOT NULL DEFAULT 0) character set utf8mb4;';
   SQL_CREATE_LANGS = 'CREATE TABLE `%s` (`id` INT PRIMARY KEY NOT NULL DEFAULT 0, `name` VARCHAR(512) NOT NULL DEFAULT '''', `desc` TEXT, `str1` TEXT, `str2` TEXT, `str3` TEXT, `str4` TEXT, `str5` TEXT, `str6` TEXT, `str7` TEXT, `str8` TEXT, `str9` TEXT, `str10` TEXT, `str11` TEXT, `str12` TEXT, `str13` TEXT, `str14` TEXT, `str15` TEXT, `str16` TEXT) character set utf8mb4;';
 
 var
@@ -55,7 +55,8 @@ begin
   end;
   sqlitePath:= path + SQLITE_FILE;
   if (FileExists(sqlitePath)) then begin
-    DeleteFile(sqlitePath);
+    Exit(sqlitePath);
+    // DeleteFile(sqlitePath);
   end;
   evt := TDataReceiveEvent.Create;
   http := TFPHTTPClient.Create(nil);

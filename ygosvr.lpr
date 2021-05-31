@@ -12,7 +12,6 @@ uses
   untRoute, untEnv, untDataObj, untMySQL, untDataConvert,
   untStringExtension, untNoDbData, untExternalExecutor, untLogger{$IFDEF DEBUG}, untTest, untTestUTF8 {$ENDIF};
 
-
 procedure showRequestException(AResponse: TResponse; AnException: Exception; var handled: boolean);
 begin
   log(lvError, 'showRequestException: ' + AnException.Message);

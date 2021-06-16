@@ -1,46 +1,40 @@
-{.$DEFINE DEBUG}
-
-// yum install sqlite-devel
-// yum install mysql-devel
-
 program ygosvr;
 
 {$mode objfpc}{$H+}
 
 uses
-  cthreads, cmem, Classes, sysutils, fpwebfile, fphttpapp, HTTPDefs, httproute, fphttp,
-  untRoute, untEnv, untDataObj, untMySQL, untDataConvert,
-  untStringExtension, untNoDbData, untExternalExecutor, untLogger{$IFDEF DEBUG}, untTest, untTestUTF8 {$ENDIF};
+  cthreads, cmem, Classes, sysutils, fpwebfile, fphttpapp, HTTPDefs, httproute,
+  fphttp, untEnv, untDataObj, untMySQL, untDataConvert, untStringExtension,
+  untNoDbData, untExternalExecutor, untRoute, ISCLogger, ISCConsts, ISCHttp;
 
 procedure showRequestException(AResponse: TResponse; AnException: Exception; var handled: boolean);
 begin
-  log(lvError, 'showRequestException: ' + AnException.Message);
+  TLogger.error('main', 'showRequestException: ' + AnException.Message);
   AResponse.Code:= 500;
-  AResponse.ContentType:= 'application/json';
+  AResponse.ContentType:= MIME_JSON;
   AResponse.Content:= '{"error": "%s"}'.Format([StrToJSONEncoded(AnException.Message)]);
   handled:= True;
 end;
 
+// var
+//  jvmPath: string;
+//  retJvm: Boolean;
 begin
-  // fill env
-  workPath:= ExtractFilePath(Application.ExeName);
-  if (workPath.EndsWith('./')) then begin
-    workPath:= workPath.Substring(0, workPath.Length - 2);
-  end;
-  WriteLn('workPath: ' + workPath);
-  filePath:= workPath + 'files/';
-  WriteLn('filePath: ' + filePath);
-  logPath:= workPath + 'logs/';
-  if (not DirectoryExists(logPath)) then begin
-    ForceDirectories(logPath);
-  end;
-  WriteLn('logPath: ' + logPath);
+  loadEnv();
+  // jvmPath:= ISCJvmPath;
+  //if (FileExists(jvmPath)) then begin
+  //  retJvm := ISCInitJVM(jvmPath, '.:./files/DIYKana.jar');
+  //  if (retJvm) then begin
+  //    TLogger.info('main', 'init jvm completed.');
+  //  end else begin
+  //    TLogger.error('main', 'init jvm failed.');
+  //  end;
+  //end else begin
+  //  TLogger.error('main', 'jvm library not exists.');
+  //end;
 
   // database
   initNoDbData();
-
-  // file location
-  RegisterFileLocation('static', filePath);
 
   // common
   HTTPRouter.RegisterRoute('/', rmAll, @index);
@@ -53,7 +47,6 @@ begin
   HTTPRouter.RegisterRoute('/api/yugioh/search', rmPost, @searchCards);
   HTTPRouter.RegisterRoute('/api/yugioh/list', rmAll, @getCardList);
   HTTPRouter.RegisterRoute('/api/yugioh/card/:password', rmAll, @getOneCard);
-
   HTTPRouter.RegisterRoute('/api/yugioh/random', rmAll, @getRandomCard);
 
   // ydk
@@ -65,22 +58,12 @@ begin
   HTTPRouter.RegisterRoute('/api/kanjikana/effect', rmPost, @kkCardEffect);
   HTTPRouter.RegisterRoute('/api/kanjikana/text', rmPost, @kkNormalText);
 
-  {$IFNDEF DEBUG}
   Application.OnShowRequestException:= @showRequestException;
   Application.QueueSize:= 1000;
-  Application.Port:=9800;
+  Application.Port:= SERVER_PORT;
   Application.Threaded:=True;
   Application.Initialize;
   Application.Run;
-  {$ELSE}
-  testGetOneCard();
-  testSearchCard();
-  testJsonArray();
-  testRegexp();
-  testUTF8();
-  testEffectCardName();
-  testUTF8Helper();
-  {$ENDIF}
 
   freeNoDbData();
 end.

@@ -3,14 +3,15 @@ program dbconv;
 {$mode objfpc}{$H+}
 
 uses
-  Classes, sysutils, mysql57conn, SQLite3Conn, SQLDB, DB, TypInfo, fphttpclient, fpopenssl, openssl, opensslsockets, ssockets, DateUtils;
+  Classes, sysutils, mysql57conn, SQLite3Conn, SQLDB, DB, TypInfo, fphttpclient, fpopenssl, openssl, opensslsockets, ssockets, DateUtils, IniFiles;
 
 const
   SQLITE_FILE = 'OmegaDB.cdb';
-  MYSQL_HOST = '127.0.0.1';
-  MYSQL_PORT = 3306;
-  MYSQL_USER = 'root';
-  MYSQL_PASSWORD = 'root';
+var
+  MYSQL_HOST: string = '127.0.0.1';
+  MYSQL_PORT: Integer = 3306;
+  MYSQL_USER: string = 'root';
+  MYSQL_PASSWORD: string = 'root';
 
 const
   SQL_CREATE_DATAS = 'CREATE TABLE `datas` (`id` INT PRIMARY KEY NOT NULL DEFAULT 0, `ot` INT NOT NULL DEFAULT 0, `alias` INT NOT NULL DEFAULT 0, `setcode` INT NOT NULL DEFAULT 0, `type` INT NOT NULL DEFAULT 0, `atk` INT NOT NULL DEFAULT 0, `def` INT NOT NULL DEFAULT 0, `level` INT NOT NULL DEFAULT 0, `race` INT NOT NULL DEFAULT 0, `attribute` INT NOT NULL DEFAULT 0, `category` INT NOT NULL DEFAULT 0, `genre` INT NOT NULL DEFAULT 0, `setid` TEXT, `script` TEXT, `support` INT NOT NULL DEFAULT 0) character set utf8mb4;';
@@ -173,6 +174,20 @@ begin
   Exit(cnt);
 end;
 
+procedure loadEnv();
+const
+  SEC_DATABAE = 'database';
+var
+  ini: TIniFile;
+begin
+  ini := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'ygosvr.cfg');
+  MYSQL_HOST:= ini.ReadString(SEC_DATABAE, 'host', 'localhost');
+  MYSQL_PORT:= ini.ReadInteger(SEC_DATABAE, 'port', 3306);
+  MYSQL_USER:= ini.ReadString(SEC_DATABAE, 'user', 'root');
+  MYSQL_PASSWORD:= ini.ReadString(SEC_DATABAE, 'password', 'root');
+  ini.Free;
+end;
+
 var
   sqlitePath: string;
   tables: array[0..11] of string = ('datas', 'ja_texts', 'zhcn_texts', 'zhtw_texts', 'texts', 'ko_texts', 'de_texts', 'es_texts', 'fr_texts', 'it_texts', 'th_texts', 'vi_texts');
@@ -181,6 +196,8 @@ var
   dataCount: Integer = 0;
   timeStart, timeEnd: Int64;
 begin
+  loadEnv();
+
   sqlitePath:= downloadDatabase();
   WriteLn('sqlite path: ' + sqlitePath);
   if (not FileExists(sqlitePath)) then begin

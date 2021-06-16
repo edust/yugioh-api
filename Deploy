@@ -1,0 +1,9 @@
+```
+$ cd <path to yugioh-api>
+$ docker build -t yugioh-service .
+
+$ docker network create rarnu_docker_network
+$ docker run --name ygosvr -p 29800:9800 --network rarnu_docker_network --network-alias ygosvr -d yugioh-service
+$ docker run --name mysqlserver -e MYSQL_ROOT_PASSWORD=root -p 23306:3306 --network rarnu_docker_network --network-alias mysqlserver -d mysql:8.0.25
+```
+

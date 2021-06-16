@@ -1,4 +1,0 @@
-* * * * * . /etc/profile;/bin/sh /root/server/monitoring.sh
-
-crontab -e
-crontab -l

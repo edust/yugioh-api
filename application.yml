@@ -1,0 +1,21 @@
+api-moudle: ygosvr
+
+server:
+  port: 9800
+
+spring:
+  profile:
+    active: default
+  application:
+    name: ygosvr
+
+fpweb:
+  profile:
+    active: default
+  application:
+    name: ygosvr
+
+logging:
+  level:
+    root: info
+

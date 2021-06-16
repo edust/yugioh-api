@@ -5,6 +5,8 @@
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
@@ -12,32 +14,8 @@
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes Count="2">
+    <BuildModes Count="1">
       <Item1 Name="Default" Default="True"/>
-      <Item2 Name="rarnu">
-        <CompilerOptions>
-          <Version Value="11"/>
-          <Target>
-            <Filename Value="ygosvr" ApplyConventions="False"/>
-          </Target>
-          <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
-          </SearchPaths>
-          <Linking>
-            <Debugging>
-              <GenerateDebugInfo Value="False"/>
-              <DebugInfoType Value="dsDwarf2Set"/>
-              <UseHeaptrc Value="True"/>
-            </Debugging>
-          </Linking>
-          <Other>
-            <CompilerMessages>
-              <IgnoredMessages idx6058="True" idx3124="True" idx3123="True"/>
-            </CompilerMessages>
-          </Other>
-        </CompilerOptions>
-      </Item2>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -47,90 +25,34 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <RequiredPackages Count="2">
-      <Item1>
-        <PackageName Value="weblaz"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="FCL"/>
-      </Item2>
-    </RequiredPackages>
-    <Units Count="13">
+    <Units Count="2">
       <Unit0>
         <Filename Value="ygosvr.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="untroute.pas"/>
+        <Filename Value="src/untroute.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="untRoute"/>
       </Unit1>
-      <Unit2>
-        <Filename Value="untenv.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untEnv"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="untdataobj.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untDataObj"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="unttest.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untTest"/>
-      </Unit4>
-      <Unit5>
-        <Filename Value="untmysql.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untMySQL"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="untdataconvert.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untDataConvert"/>
-      </Unit6>
-      <Unit7>
-        <Filename Value="untstringextension.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untStringExtension"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="untnodbdata.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untNoDbData"/>
-      </Unit8>
-      <Unit9>
-        <Filename Value="utf8stringhelper.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="UTF8StringHelper"/>
-      </Unit9>
-      <Unit10>
-        <Filename Value="unttestutf8.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untTestUTF8"/>
-      </Unit10>
-      <Unit11>
-        <Filename Value="untexternalexecutor.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untExternalExecutor"/>
-      </Unit11>
-      <Unit12>
-        <Filename Value="untlogger.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="untLogger"/>
-      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="ygosvr" ApplyConventions="False"/>
+      <Filename Value="ygosvr"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)"/>
+      <IncludeFiles Value="$(ProjOutDir);iscbase;iscbase/database;iscbase/database/component;iscbase/database/core;iscbase/database/dbc;iscbase/database/parsesql;iscbase/database/plain;iscbase/network;iscbase/script"/>
+      <OtherUnitFiles Value="/usr/lib/lazarus/components/lazutils/lib/x86_64-linux/;/Applications/Lazarus/components/lazutils/lib/x86_64-darwin/;C:\lazarus\components\lazutils\lib\x86_64-win64;/usr/lib/lazarus/packager/units/x86_64-linux/;/Applications/Lazarus/packager/units/x86_64-darwin/;C:\lazarus\packager\units\x86_64-win64;src;test;iscbase;iscbase/database;iscbase/database/component;iscbase/database/core;iscbase/database/dbc;iscbase/database/parsesql;iscbase/database/plain;iscbase/network;iscbase/script;iscbase/coroutine;iscbase/websocket"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <Other>
+      <CompilerMessages>
+        <IgnoredMessages idx6058="True" idx3124="True" idx3123="True"/>
+      </CompilerMessages>
+      <CustomOptions Value="-Cn"/>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

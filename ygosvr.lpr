@@ -20,7 +20,8 @@ end;
 //  jvmPath: string;
 //  retJvm: Boolean;
 begin
-  loadEnv();
+  loadYamlConfig(@loadEnv);
+
   // jvmPath:= ISCJvmPath;
   //if (FileExists(jvmPath)) then begin
   //  retJvm := ISCInitJVM(jvmPath, '.:./files/DIYKana.jar');

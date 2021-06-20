@@ -51,7 +51,6 @@
       <CompilerMessages>
         <IgnoredMessages idx6058="True" idx3124="True" idx3123="True"/>
       </CompilerMessages>
-      <CustomOptions Value="-Cn"/>
     </Other>
   </CompilerOptions>
   <Debugging>

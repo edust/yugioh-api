@@ -5,10 +5,10 @@ unit untMySQL;
 interface
 
 uses
-  Classes, SysUtils, mysql80conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, ISCLogger, DateUtils, untExternalExecutor;
+  Classes, SysUtils, mysql57conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, ISCLogger, DateUtils, untExternalExecutor;
 
 type
-  TMySQLConnection = TMySQL80Connection;
+  TMySQLConnection = TMySQL57Connection;
 
 procedure initMySQL(out conn: TMySQLConnection; out query: TSQLQuery; out trans: TSQLTransaction);
 procedure freeMySQL(conn: TMySQLConnection; query: TSQLQuery; trans: TSQLTransaction);

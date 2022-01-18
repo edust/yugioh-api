@@ -5,10 +5,13 @@ unit untMySQL;
 interface
 
 uses
-  Classes, SysUtils, mysql57conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, ISCLogger, DateUtils, untExternalExecutor;
+  Classes, SysUtils, mysql80conn, SQLDB, untEnv, untDataObj, RegExpr, untStringExtension, ISCLogger, DateUtils, untExternalExecutor;
 
-procedure initMySQL(out conn: TMySQL57Connection; out query: TSQLQuery; out trans: TSQLTransaction);
-procedure freeMySQL(conn: TMySQL57Connection; query: TSQLQuery; trans: TSQLTransaction);
+type
+  TMySQLConnection = TMySQL80Connection;
+
+procedure initMySQL(out conn: TMySQLConnection; out query: TSQLQuery; out trans: TSQLTransaction);
+procedure freeMySQL(conn: TMySQLConnection; query: TSQLQuery; trans: TSQLTransaction);
 
 function doGetKanaCount(): Integer;
 function doGetSetCount(): Integer;
@@ -30,12 +33,32 @@ function doGetLastSyncDate(): string;
 
 implementation
 
-procedure initMySQL(out conn: TMySQL57Connection; out query: TSQLQuery; out
+function GenPackName(lang: string; abbr: string): string;
+var
+  r: Integer;
+  rstr: string;
+begin
+  Randomize;
+  r := Random(100);
+  if (r = 0) then begin
+    r := 1;
+  end;
+  rstr:= IntToStr(r);
+  if (rstr.Length < 2) then begin
+    rstr:= '0' + rstr;
+  end;
+  if (lang.ToLower = 'ko') then begin
+    lang:= 'kr';
+  end;
+  Result := abbr.ToUpper + '-' + lang.ToUpper + '0' + rstr;
+end;
+
+procedure initMySQL(out conn: TMySQLConnection; out query: TSQLQuery; out
   trans: TSQLTransaction);
 var
   succ: Boolean;
 begin
-  conn := TMySQL57Connection.Create(nil);
+  conn := TMySQLConnection.Create(nil);
   conn.SkipLibraryVersionCheck:= True;
   trans := TSQLTransaction.Create(nil);
   conn.Transaction := trans;
@@ -68,7 +91,7 @@ begin
   end;
 end;
 
-procedure freeMySQL(conn: TMySQL57Connection; query: TSQLQuery;
+procedure freeMySQL(conn: TMySQLConnection; query: TSQLQuery;
   trans: TSQLTransaction);
 begin
   if (query <>  nil) then begin
@@ -86,7 +109,7 @@ end;
 
 function doGetKanaCount(): Integer;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   cnt: Integer = 0;
@@ -112,7 +135,7 @@ end;
 
 function doGetSetCount(): Integer;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   cnt: Integer = 0;
@@ -138,7 +161,7 @@ end;
 
 function getNameKanjiKana(aname: string): string;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   ret: string = '';
@@ -164,7 +187,7 @@ end;
 
 function getSetKanjiKana(asetname: string): string;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   ret: string = '';
@@ -288,7 +311,7 @@ function doSearchCardData(AKey: string; ACardType: Integer; AAttr: Integer;
   AIcon: Integer; ASubType: Integer; ARace: Integer; AMonsterType: Integer;
   ALang: string): TListCardData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -324,7 +347,7 @@ begin
       item.level:= query.FieldByName('level').AsInteger;
       item.race:= query.FieldByName('race').AsInteger;
       item.attribute:= query.FieldByName('attribute').AsInteger;
-      item.setid:= query.FieldByName('setid').AsString;
+      item.setid:= GenPackName(ALang, query.FieldByName('setid').AsString);
       list.Add(item);
       query.Next;
     end;
@@ -340,7 +363,7 @@ end;
 
 function doGetOneCard(APassword: Integer; ALang: string): TCardData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -364,7 +387,7 @@ begin
       d.level:= query.FieldByName('level').AsInteger;
       d.race:= query.FieldByName('race').AsInteger;
       d.attribute:= query.FieldByName('attribute').AsInteger;
-      d.setid:= query.FieldByName('setid').AsString;
+      d.setid:= GenPackName(ALang, query.FieldByName('setid').AsString);
     end;
   except
     on E: Exception do begin
@@ -378,7 +401,7 @@ end;
 
 function doGetCardList(AName: string; ALang: string): TListCardNameData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -412,7 +435,7 @@ end;
 
 function doGetRandomCard(ALang: string): TCardData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -444,7 +467,7 @@ end;
 
 function doYdkFindCardList(AByEffect: Boolean; AKey: string; ALang: string): TListCardNameData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -481,7 +504,7 @@ end;
 function doYdkGetNamesByIds(AIds: TStringList; ALang: string
   ): TListCardNameData;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   tn: string;
@@ -522,7 +545,7 @@ end;
 
 function doGetCardCount(): Integer;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   cnt: Integer = 0;
@@ -548,7 +571,7 @@ end;
 
 function doGetLastSyncDate(): string;
 var
-  conn: TMySQL57Connection;
+  conn: TMySQLConnection;
   query: TSQLQuery;
   trans: TSQLTransaction;
   dtStr: string = 'unknown';

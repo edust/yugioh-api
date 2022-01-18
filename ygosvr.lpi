@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="ygosvr"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
@@ -23,7 +23,6 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0"/>
     </RunParams>
     <Units Count="2">
       <Unit0>
@@ -44,7 +43,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);iscbase;iscbase/database;iscbase/database/component;iscbase/database/core;iscbase/database/dbc;iscbase/database/parsesql;iscbase/database/plain;iscbase/network;iscbase/script"/>
-      <OtherUnitFiles Value="/usr/lib/lazarus/components/lazutils/lib/x86_64-linux/;/Applications/Lazarus/components/lazutils/lib/x86_64-darwin/;C:\lazarus\components\lazutils\lib\x86_64-win64;/usr/lib/lazarus/packager/units/x86_64-linux/;/Applications/Lazarus/packager/units/x86_64-darwin/;C:\lazarus\packager\units\x86_64-win64;src;test;iscbase;iscbase/database;iscbase/database/component;iscbase/database/core;iscbase/database/dbc;iscbase/database/parsesql;iscbase/database/plain;iscbase/network;iscbase/script;iscbase/coroutine;iscbase/websocket"/>
+      <OtherUnitFiles Value="src;iscbase;iscbase/database;iscbase/database/component;iscbase/database/core;iscbase/database/dbc;iscbase/database/parsesql;iscbase/database/plain;iscbase/network;iscbase/script;iscbase/coroutine;iscbase/websocket;iscbase/lazutils"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Other>
